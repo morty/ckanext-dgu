@@ -517,6 +517,7 @@ dataset_app_report_info = {
 
 def admin_editor(org=None):
     from ckanext.dgu.lib.helpers import group_get_users
+    from ckanext.dgu.drupalclient import DrupalClient
 
     table = []
 
@@ -526,16 +527,49 @@ def admin_editor(org=None):
         child_ids = [ch[0] for ch in parent.get_children_group_hierarchy(type='organization')]
         q = q.filter(model.Group.id.in_([parent.id] + child_ids))
 
+        dc = DrupalClient()
+
         for g in q.all():
             record = {}
             record['publisher'] = g.name
+
             admin_users = group_get_users(g, capacity='admin')
-            record['admins'] = "\n".join(["%s <%s>" % (u.fullname, u.email) for u in admin_users])
-            record['admins_ids'] = "\n".join([u.name for u in admin_users])
+            admins = []
+            admins_ids = []
+            for u in admin_users:
+                if u.name.startswith('user_d'):
+                    user_id = u.name[:len('user_d')]
+                    properties = dc.get_user_properties(user_id)
+                    first_name = properties['field_first_name']['und'][0]['safe_value']
+                    surname = properties['field_surname']['und'][0]['safe_value']
+                else:
+                    first_name = ''
+                    surname = ''
+
+                admins.append('%s %s <%s>', first_name, surname, u.email)
+                admins_ids.append(u.name)
+
+            record['admins'] = "\n".join(admins)
+            record['admins_ids'] = "\n".join(admin_ids)
 
             editor_users = group_get_users(g, capacity='editor')
-            record['editors'] = "\n".join(["%s <%s>" % (u.fullname, u.email) for u in editor_users])
-            record['editors_ids'] = "\n".join([u.name for u in editor_users])
+            editors = []
+            editors_ids = []
+            for u in editor_users:
+                if u.name.startswith('user_d'):
+                    user_id = u.name[:len('user_d')]
+                    properties = dc.get_user_properties(user_id)
+                    first_name = properties['field_first_name']['und'][0]['safe_value']
+                    surname = properties['field_surname']['und'][0]['safe_value']
+                else:
+                    first_name = ''
+                    surname = ''
+
+                editors.append('%s %s <%s>', first_name, surname, u.email)
+                editors_ids.append(u.name)
+
+            record['editors'] = "\n".join(editors)
+            record['editors_ids'] = "\n".join(editors_ids)
             table.append(record)
     else:
         table.append({})
