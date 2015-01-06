@@ -525,7 +525,7 @@ def get_user_realname(user):
             dc = DrupalClient()
             properties = dc.get_user_properties(user_id)
         except Exception, ex:
-            return ''
+            return user.fullname
 
         try:
             first_name = properties['field_first_name']['und'][0]['safe_value']
