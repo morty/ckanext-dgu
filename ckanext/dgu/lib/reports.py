@@ -515,9 +515,39 @@ dataset_app_report_info = {
     'template': 'report/dataset_app_report.html',
     }
 
+def get_user_realname(user):
+    from ckanext.dgu.drupalclient import DrupalClient
+
+    if user.name.startswith('user_d'):
+        user_id = user.name[len('user_d'):]
+
+        try:
+            dc = DrupalClient()
+            properties = dc.get_user_properties(user_id)
+        except Exception, ex:
+            return ''
+
+        try:
+            first_name = properties['field_first_name']['und'][0]['safe_value']
+        except:
+            first_name = ''
+
+        try:
+            surname = properties['field_surname']['und'][0]['safe_value']
+        except:
+            surname = ''
+    else:
+        first_name = ''
+        surname = ''
+
+    name = '%s %s' % (first_name, surname)
+    if name.strip() == '':
+        name = user.fullname
+
+    return name
+
 def admin_editor(org=None):
     from ckanext.dgu.lib.helpers import group_get_users
-    from ckanext.dgu.drupalclient import DrupalClient
 
     table = []
 
@@ -527,8 +557,6 @@ def admin_editor(org=None):
         child_ids = [ch[0] for ch in parent.get_children_group_hierarchy(type='organization')]
         q = q.filter(model.Group.id.in_([parent.id] + child_ids))
 
-        dc = DrupalClient()
-
         for g in q.all():
             record = {}
             record['publisher'] = g.name
@@ -537,35 +565,19 @@ def admin_editor(org=None):
             admins = []
             admins_ids = []
             for u in admin_users:
-                if u.name.startswith('user_d'):
-                    user_id = u.name[:len('user_d')]
-                    properties = dc.get_user_properties(user_id)
-                    first_name = properties['field_first_name']['und'][0]['safe_value']
-                    surname = properties['field_surname']['und'][0]['safe_value']
-                else:
-                    first_name = ''
-                    surname = ''
-
-                admins.append('%s %s <%s>', first_name, surname, u.email)
+                name = get_user_realname(u)
+                admins.append('%s <%s>' % (name, u.email))
                 admins_ids.append(u.name)
 
             record['admins'] = "\n".join(admins)
-            record['admins_ids'] = "\n".join(admin_ids)
+            record['admins_ids'] = "\n".join(admins_ids)
 
             editor_users = group_get_users(g, capacity='editor')
             editors = []
             editors_ids = []
             for u in editor_users:
-                if u.name.startswith('user_d'):
-                    user_id = u.name[:len('user_d')]
-                    properties = dc.get_user_properties(user_id)
-                    first_name = properties['field_first_name']['und'][0]['safe_value']
-                    surname = properties['field_surname']['und'][0]['safe_value']
-                else:
-                    first_name = ''
-                    surname = ''
-
-                editors.append('%s %s <%s>', first_name, surname, u.email)
+                name = get_user_realname(u)
+                editors.append('%s <%s>' % (name, u.email))
                 editors_ids.append(u.name)
 
             record['editors'] = "\n".join(editors)
