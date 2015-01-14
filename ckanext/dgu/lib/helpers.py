@@ -794,6 +794,10 @@ def get_package_fields(package, pkg_extras, dataset_was_harvested,
             secondary_themes = THEMES.get(secondary_themes,
                                           secondary_themes)
 
+    mandates = pkg_extras.get('mandate')
+    if mandates:
+        mandates = ",".join(json.loads(mandates))
+
     field_value_map = {
         # field_name : {display info}
         'date_added_to_dgu': {'label': 'Added to data.gov.uk', 'value': package.metadata_created.strftime('%d/%m/%Y')},
@@ -815,6 +819,7 @@ def get_package_fields(package, pkg_extras, dataset_was_harvested,
         'taxonomy_url': {'label': 'Taxonomy URL', 'value': taxonomy_url},
         'theme': {'label': 'Theme', 'value': primary_theme},
         'theme-secondary': {'label': 'Themes (secondary)', 'value': secondary_themes},
+        'mandate': {'label': 'Mandate', 'value': mandates},
         'metadata-language': {'label': 'Metadata language', 'value': pkg_extras.get('metadata-language', '').replace('eng', 'English')},
         'metadata-date': {'label': 'Metadata date', 'value': DateType.db_to_form(pkg_extras.get('metadata-date', ''))},
         'dataset-reference-date': {'label': 'Dataset reference date', 'value': dataset_reference_date},
