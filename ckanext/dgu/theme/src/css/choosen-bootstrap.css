@@ -148,3 +148,14 @@ select.form-control + .chzn-container-multi .chzn-results li.result-selected{
     cursor: default;
     background-color: white;
 }
+
+select.form-control + .chzn-container .chzn-results li.group-result,
+select.form-control + .chzn-container .chzn-results li.group-result:hover
+{
+    font-weight:bold;
+    color:#333;
+    text-decoration: none;
+    padding: 3px 10px;
+    background-color: #fff;
+    background-image:none;
+}
